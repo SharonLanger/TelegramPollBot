@@ -1,0 +1,135 @@
+#!/usr/bin/env python
+import logging
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
+from BackendRequest import register_user, remove_user, send_answer_to_backend
+import properties
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def start(update, context):
+    """
+
+    Method related to the action '/start'
+    This will write the basic bot info and action supported by the bot
+
+    """
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="Hello, {}.".format(update.message.from_user.first_name))
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="Welcome to smart polling.\nPlease choose one of the options:\n")
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="/register <user-name> - Register to start answering polls via telegram\n"
+                                  "<user-name> in smart polling system\n\n"
+                                  "/remove <user-name> - To stop getting polls queries\n"
+                                  "<user-name> in smart polling system\n\n"
+                                  "/start - Use start anytime to see this menu again")
+
+
+def button(update, context):
+    """
+
+    Used for the button logic of the poll answering options
+
+    """
+    query = update.callback_query
+
+    # CallbackQueries need to be answered, even if no notification to the user is needed
+    # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
+    query.answer()
+    poll_id = query.data.split('&')[0]
+    answer_id = query.data.split('&')[1]
+    print("New poll answer:")
+    print("    User: ", update.effective_chat.id)
+    print("    Poll ID: ", poll_id)
+    print("    Answered: ", answer_id)
+
+    if send_answer_to_backend(update.effective_chat.id, poll_id, answer_id):
+        print("OK: send_answer_to_backend")
+        query.edit_message_text(text="Thank you for your answer")
+    else:
+        print("FAIL!!!!!: send_answer_to_backend")
+        query.edit_message_text(text="Something went wrong... =(")
+
+
+def remove(update, context):
+    """
+
+    Method related to the action '/remove'
+    This will remove(unregister) a user from the service
+
+    """
+    logger.debug("/remove -> User:")
+    logger.debug("--------------------")
+    logger.debug("update.effective_chat.id: \n{}".format(update.effective_chat.id))
+    logger.debug("update.effective_chat: \n{}".format(update.effective_chat))
+    logger.debug("---------------------------------------------------------------------------------------------------")
+
+    if remove_user(update.effective_chat.id):
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Hello, {}.\nYou are removed from smart polling."
+                                 .format(update.message.from_user.first_name))
+        logger.debug("Removed from smart polling")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Could not remove from backend")
+        logger.debug("Could not remove from backend")
+
+
+def register(update, context):
+    """
+
+    Method related to the action '/remove'
+    This will register a user to the service
+
+    """
+    logger.debug("/register -> New User:")
+    logger.debug("----------------------")
+    logger.debug("update.effective_chat.id: \n{}".format(update.effective_chat.id))
+    logger.debug("update.effective_chat: \n{}".format(update.effective_chat))
+    logger.debug("---------------------------------------------------------------------------------------------------")
+
+    try:
+        user_name = context.args[0]
+    except Exception as e:
+        print(e)
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Please enter: \"/register <user_name>\"")
+    else:
+        if register_user(update.effective_chat.id, user_name):
+            context.bot.send_message(chat_id=update.effective_chat.id,
+                                     text="You are registered to smart polling.")
+            context.bot.send_message(chat_id=update.effective_chat.id,
+                                     text="Note:\nThe service costs 2$ per month")
+            logger.debug("Registered to smart polling")
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id,
+                                     text="Could not register to backend")
+            logger.debug("Could not register to backend")
+
+
+def main():
+    bot_key = properties.bot_key
+    # Create the Updater and pass it your bot's token.
+    # Make sure to set use_context=True to use the new context based callbacks
+
+    # Make sure that you use your own bot key generated by you
+    updater = Updater(bot_key, use_context=True)
+    updater.dispatcher.add_handler(CommandHandler('start', start, pass_chat_data=True, pass_user_data=True))
+    updater.dispatcher.add_handler(CommandHandler('remove', remove, pass_chat_data=True, pass_user_data=True))
+    updater.dispatcher.add_handler(CommandHandler('register', register, pass_chat_data=True, pass_user_data=True))
+    updater.dispatcher.add_handler(CallbackQueryHandler(button, pass_chat_data=True, pass_user_data=True))
+
+    # Start the Bot
+    updater.start_polling()
+
+    # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT
+    updater.idle()
+
+
+if __name__ == '__main__':
+    # logger.setLevel(level=logging.DEBUG)
+    main()
