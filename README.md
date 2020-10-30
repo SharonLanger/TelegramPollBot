@@ -1,10 +1,10 @@
-# Smart polling telegram bot
+# Smart polls telegram bot
 
 ![](https://core.telegram.org/file/811140763/1/PihKNbjT8UE/03b57814e13713da37)
 
-## Connecting your bot to smart polling:
+## Connecting your bot to smart polls:
 In the properties file fill the two properties needed:
-- URL to the smart-polling-backend
+- URL to the smart-polls-backend
 - Your bot TOKEN.
 
 ### Getting telegram bot TOKEN:
