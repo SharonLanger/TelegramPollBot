@@ -21,6 +21,7 @@ All you need to do is:
 - Give it a user_name(must end with the word bot)
 - Copy the HTTP API the bot gave you
 - enable inline for your bot: /setinline (Our bot needs it to display the polls options)
+
 That is it 
 
 If you want more info, please follow one of the two:
