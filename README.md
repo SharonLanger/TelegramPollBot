@@ -14,7 +14,16 @@ You get it when creating a new bot.
 How to create a new bot?
 Well, telegram have a bot for that. Just talk to BotFather.
 
-Please follow one of the two:
+All you need to do is:
+- Go to the BotFather(look him up in telegram)
+- Create a new bot: /newbot
+- Give it a name
+- Give it a user_name(must end with the word bot)
+- Copy the HTTP API the bot gave you
+- enable inline for your bot: /setinline (Our bot needs it to display the polls options)
+That is it 
+
+If you want more info, please follow one of the two:
 - https://docs.microsoft.com/en-us/azure/bot-service/bot-service-channel-connect-telegram?view=azure-bot-service-4.0
 - https://www.process.st/telegram-bot/
 
